@@ -768,14 +768,6 @@ async function cancelItem(item, btn) {
   }
 }
 
-async function chooseItem(item) {
-  addMessage(`Quero reservar: ${item.emoji} ${item.name}`, 'user');
-  showTyping();
-
-  try {
-    await postReservation(item);
-
-    reservatio
 // ── startChat ─────────────────────────────────────────────────
 
 async function startChat() {
