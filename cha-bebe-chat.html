@@ -25,6 +25,8 @@
     font-family: 'DM Sans', sans-serif;
     background: var(--cream);
     min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -670,7 +672,7 @@ function addMessage(content, who) {
 
   row.appendChild(bub);
   msgs.appendChild(row);
-  msgs.scrollTop = msgs.scrollHeight;
+  return row;
 }
 
 function showTyping() {
@@ -687,7 +689,7 @@ function showTyping() {
   t.innerHTML = '<span></span><span></span><span></span>';
   row.appendChild(t);
   msgs.appendChild(row);
-  msgs.scrollTop = msgs.scrollHeight;
+  row.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function removeTyping() {
@@ -761,7 +763,8 @@ function buildSuccessMsg(item) {
 async function cancelItem(item, btn) {
   btn.disabled = true;
   btn.textContent = 'Cancelando... ⏳';
-  addMessage(`Quero cancelar minha reserva: ${item.emoji} ${item.name}`, 'user');
+  const cmsg = addMessage(`Quero cancelar minha reserva: ${item.emoji} ${item.name}`, 'user');
+  if (cmsg) cmsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
   showTyping();
 
   try {
@@ -821,6 +824,8 @@ async function startChat() {
   const chatArea = document.getElementById('chatArea');
   chatArea.classList.remove('hidden');
   chatArea.style.display = 'flex';
+  window.scrollTo(0, 0);
+  document.getElementById('messages').scrollTop = 0;
 
   updateProgress();
 
@@ -837,8 +842,9 @@ async function startChat() {
   } else {
     addMessage(`Olá, <strong>${currentUser}</strong>! ${bemVindo()} ao chá da Catarina 🎀`, 'bot');
     setTimeout(() => {
-      addMessage('Escolha um item da lista para presentear a bebê. Cada item pode ser escolhido por apenas uma pessoa!', 'bot');
-      setTimeout(() => addMessage(buildItemsList(true), 'bot'), 400);
+      addMessage('Escolha um item da lista para presentear a bebê. Cada item pode ser escolhido por apenas uma pessoa! Temos algumas sugestões de marcas para te auxiliar 😊', 'bot');
+      setTimeout(() => addMessage('💡 <strong>Sugestões de marcas:</strong><br><br>🧷 <strong>Fraldas:</strong> Pampers Premium Care, Huggies Natural Care, Personal Baby Premium Protection<br><br>🧴 <strong>Sabonetes:</strong> BabyDove, Johnson\'s Baby<br><br>🩹 <strong>Pomada:</strong> Bepantol Baby<br><br>🌿 <strong>Lenços:</strong> Bepantol Baby, Huggies Pure Care, Pampers Cuidado de Bebê', 'bot'), 600);
+      setTimeout(() => addMessage(buildItemsList(true), 'bot'), 1400);
     }, 600);
   }
 }
@@ -850,7 +856,8 @@ async function chooseItem(item) {
   userHasChosen = true;
   userChosenId = item.id;
 
-  addMessage(`Quero reservar: ${item.emoji} ${item.name}`, 'user');
+  const umsg = addMessage(`Quero reservar: ${item.emoji} ${item.name}`, 'user');
+  if (umsg) umsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
   showTyping();
 
   try {
