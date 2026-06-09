@@ -776,3 +776,89 @@ async function chooseItem(item) {
     await postReservation(item);
 
     reservatio
+// ── startChat ─────────────────────────────────────────────────
+
+async function startChat() {
+  const input = document.getElementById('nameInput');
+  const name = input.value.trim();
+  if (!name) {
+    showError('Por favor, digite seu nome antes de continuar.');
+    return;
+  }
+  clearError();
+  currentUser = name;
+
+  const btn = document.getElementById('enterBtn');
+  btn.disabled = true;
+  btn.textContent = 'Carregando lista... ⏳';
+
+  try {
+    await fetchReservations();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Ver lista de presentes →';
+    showError('Não consegui carregar a lista. Verifique a conexão e tente novamente.');
+    return;
+  }
+
+  // Transição: esconde tela de nome, mostra chat
+  document.getElementById('nameScreen').style.display = 'none';
+  const chatArea = document.getElementById('chatArea');
+  chatArea.classList.remove('hidden');
+  chatArea.style.display = 'flex';
+
+  updateProgress();
+
+  // Verifica se o usuário já tem reserva
+  const existing = getUserReservation(currentUser);
+  if (existing) {
+    userHasChosen = true;
+    userChosenId = existing.id;
+    const item = CONFIG.items.find(i => i.id === existing.id);
+    addMessage(`Oi de novo, <strong>${currentUser}</strong>! 👋`, 'bot');
+    setTimeout(() => {
+      if (item) addMessage(buildSuccessMsg(item), 'bot');
+    }, 400);
+  } else {
+    addMessage(`Olá, <strong>${currentUser}</strong>! Bem-vinda ao chá da Catarina 🎀`, 'bot');
+    setTimeout(() => {
+      addMessage('Escolha um item da lista para presentear a bebê. Cada item pode ser escolhido por apenas uma pessoa!', 'bot');
+      setTimeout(() => addMessage(buildItemsList(true), 'bot'), 400);
+    }, 600);
+  }
+}
+
+// ── chooseItem ────────────────────────────────────────────────
+
+async function chooseItem(item) {
+  if (userHasChosen) return;
+  userHasChosen = true;
+  userChosenId = item.id;
+
+  addMessage(`Quero reservar: ${item.emoji} ${item.name}`, 'user');
+  showTyping();
+
+  try {
+    await postReservation(item);
+    reservations[String(item.id)] = { usuario: currentUser, timestamp: new Date().toISOString() };
+    updateProgress();
+    removeTyping();
+    addMessage(buildSuccessMsg(item), 'bot');
+  } catch (e) {
+    userHasChosen = false;
+    userChosenId = null;
+    removeTyping();
+    addMessage('Ops! Não consegui reservar. Tente novamente. 😕', 'bot');
+  }
+}
+
+// Enter key no campo de nome
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('nameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startChat();
+  });
+});
+
+</script>
+</body>
+</html>
